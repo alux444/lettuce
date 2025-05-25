@@ -4,16 +4,17 @@
 #include <string>
 #include <atomic>
 
-class LettuceServer {
-  public:
-    LettuceServer(int port);
-    void run();
-    void shutdown();
+class LettuceServer
+{
+public:
+  LettuceServer(int port);
+  void run();
+  void shutdown();
 
-  private:
-    int port;
-    int serverSocket;
-    std::atomic<bool> isRunning;
+private:
+  int port;
+  int serverSocket;
+  std::atomic<bool> isRunning;
 };
 
 #endif
