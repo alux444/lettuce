@@ -1,9 +1,14 @@
 #include "../include/LettuceServer.h"
+#include "../include/LettuceCommandHandler.h"
 
 #include <iostream>
 #include <sys/socket.h>
 #include <unistd.h>
 #include <netinet/in.h>
+#include <thread>
+#include <vector>
+
+#define DEBUG 0
 
 static LettuceServer *globalServer = nullptr;
 
@@ -48,7 +53,7 @@ void LettuceServer::run()
 
   if (bind(serverSocket,
            (struct sockaddr *)&serverAddress,
-            sizeof(serverAddress)) < 0)
+           sizeof(serverAddress)) < 0)
   {
     std::cerr << "Failed to bind socket." << std::endl;
     return;
@@ -61,4 +66,59 @@ void LettuceServer::run()
   }
 
   std::cout << "Lettuce server listening on port " << port << std::endl;
+
+  std::vector<std::thread> threads;
+  LettuceCommandHandler commandHandler;
+  while (isRunning)
+  {
+    int clientSocket = accept(serverSocket, nullptr, nullptr);
+    std::cout << "Client connected." << std::endl;
+
+    if (clientSocket < 0)
+    {
+      if (!isRunning)
+      {
+        std::cerr << "-ERR Accepting client connection" << std::endl;
+        break;
+      }
+    }
+
+    // start new thread and add to thread vector
+    // take clientsocket by value so each thread owns its copy of socket
+    // commandhandler as reference, because we want to share it between threads
+    threads.emplace_back([clientSocket, &commandHandler]()
+    {
+        char buffer[1024];
+        while (true)
+        {
+          memset(buffer, 0, sizeof(buffer)); // clear the buffer
+
+          std::cout << "Waiting for command..." << std::endl;
+          int receivedBytes = recv(clientSocket, buffer, sizeof(buffer)-1, 0); // read up to 1023 bytes from the client
+          std::cout << "Received " << receivedBytes << " bytes." << std::endl;
+
+          if (receivedBytes <= 0)
+          {
+            std::cerr << "-ERR Failed to receive data or client disconnected." << std::endl;
+            close(clientSocket);
+            return;
+          }
+
+          std::string request(buffer, receivedBytes); // construct string from received bytes
+          std::string response = commandHandler.handleCommand(request);
+          send(clientSocket, response.c_str(), response.size(), 0); // send response back to client
+          std::cout << "Sent response: " << response << std::endl;
+        }
+        close(clientSocket); 
+      }
+    );
+
+    for (auto &thread : threads)
+    {
+      if (thread.joinable())
+        thread.join();
+    }
+
+    // TODO: shutdown
+  }
 }
