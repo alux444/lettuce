@@ -20,5 +20,5 @@ TEST_CASE("parseRespCommand handles inline commands", "[resp]") {
 TEST_CASE("LettuceCommandHandler returns OK", "[handler]") {
     LettuceCommandHandler handler;
     std::string resp = handler.handleCommand("*1\r\n$4\r\nPING\r\n");
-    REQUIRE(resp.find("+OK") != std::string::npos);
+    REQUIRE(resp.find("+PONG") != std::string::npos);
 }

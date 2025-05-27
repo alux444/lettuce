@@ -1,4 +1,5 @@
 #include <../include/LettuceCommandHandler.h>
+#include <../include/LettuceDatabase.h>
 
 #include <vector>
 #include <sstream>
@@ -89,11 +90,16 @@ std::string LettuceCommandHandler::handleCommand(const std::string& commandLine)
   std::transform(command.begin(), command.end(), command.begin(), ::toupper);
   std::ostringstream response;
   // return the command
-  response << "+OK\r\n";
-
   // TODO: connect to database
+  // LettuceDatabase& db = LettuceDatabase.getInstance();
 
   // TODO: check commands
+  if (command == "PING")
+  {
+    response << "+PONG\r\n";
+  } else {
+    response << "-ERR: Unknown command\r\n";
+  }
   
   return response.str();
 }
