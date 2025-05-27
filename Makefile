@@ -6,8 +6,8 @@ SRC_DIR = src
 TESTS_DIR = tests
 BUILD_DIR = build
 
-TEST_SRC = tests/test_lettuce.cpp
-TEST_OBJ = $(BUILD_DIR)/test_lettuce.o
+TEST_SRC = $(wildcard $(TESTS_DIR)/*.cpp)
+TEST_OBJS = $(patsubst $(TESTS_DIR)/%.cpp, $(BUILD_DIR)/%.o, $(TEST_SRC))
 TEST_TARGET = test_runner
 
 SRC = $(wildcard $(SRC_DIR)/*.cpp)
@@ -20,7 +20,7 @@ all: $(TARGET)
 $(TARGET): $(OBJS)
 	$(CXX) $(CXXFLAGS) $(OBJS) -o $(TARGET)
 
-$(TEST_TARGET): $(TEST_OBJ) $(OBJS_NO_MAIN)
+$(TEST_TARGET): $(TEST_OBJS) $(OBJS_NO_MAIN)
 	$(CXX) $(CXXFLAGS) $^ -o $@
 
 test: $(TEST_TARGET)
@@ -32,7 +32,7 @@ $(BUILD_DIR):
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-$(BUILD_DIR)/test_lettuce.o: $(TEST_SRC) | $(BUILD_DIR)
+$(BUILD_DIR)/%.o: $(TESTS_DIR)/%.cpp | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
