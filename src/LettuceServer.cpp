@@ -135,13 +135,13 @@ void LettuceServer::run()
         thread.join();
     }
 
-    // if (LettuceDatabase::getInstance().dump("dump.ldb"))
-    // {
-    //   std::cout << "Database dumped to dump.ldb" << std::endl;
-    // }
-    // else
-    // {
-    //   std::cout << "-ERR failed to dump database" << std::endl;
-    // }
+    if (LettuceDatabase::getInstance().dump("dump.ldb"))
+    {
+      std::cout << "Database dumped to dump.ldb" << std::endl;
+    }
+    else
+    {
+      std::cout << "-ERR failed to dump database" << std::endl;
+    }
   }
 }

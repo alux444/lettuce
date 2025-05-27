@@ -5,7 +5,7 @@
 class LettuceDatabase
 {
 public:
-  static LettuceDatabase &getInstance(); // singleton
+  static LettuceDatabase& getInstance(); // singleton
 
   bool dump(const std::string &filename);
   bool load(const std::string &filename);
