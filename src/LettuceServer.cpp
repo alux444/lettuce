@@ -1,5 +1,6 @@
 #include "../include/LettuceServer.h"
 #include "../include/LettuceCommandHandler.h"
+#include "../include/LettuceDatabase.h"
 
 #include <iostream>
 #include <sys/socket.h>
@@ -7,14 +8,31 @@
 #include <netinet/in.h>
 #include <thread>
 #include <vector>
+#include <signal.h>
 
 #define DEBUG 0
 
 static LettuceServer *globalServer = nullptr;
 
+void signalHandler(int signum)
+{
+  if (globalServer)
+  {
+    std::cout << "Caught signal: " << signum << ", shutting down..." << std::endl;
+    globalServer->shutdown();
+  }
+  exit(signum);
+}
+
+void LettuceServer::setupSignalHandler()
+{
+  signal(SIGINT, signalHandler);
+}
+
 LettuceServer::LettuceServer(int port) : port(port), serverSocket(-1), isRunning(true)
 {
   globalServer = this;
+  setupSignalHandler();
 }
 
 void LettuceServer::shutdown()
@@ -87,7 +105,7 @@ void LettuceServer::run()
     // take clientsocket by value so each thread owns its copy of socket
     // commandhandler as reference, because we want to share it between threads
     threads.emplace_back([clientSocket, &commandHandler]()
-    {
+                         {
         char buffer[1024];
         while (true)
         {
@@ -109,9 +127,7 @@ void LettuceServer::run()
           send(clientSocket, response.c_str(), response.size(), 0); // send response back to client
           std::cout << "Sent response: " << response << std::endl;
         }
-        close(clientSocket); 
-      }
-    );
+        close(clientSocket); });
 
     for (auto &thread : threads)
     {
@@ -119,6 +135,13 @@ void LettuceServer::run()
         thread.join();
     }
 
-    // TODO: shutdown
+    // if (LettuceDatabase::getInstance().dump("dump.ldb"))
+    // {
+    //   std::cout << "Database dumped to dump.ldb" << std::endl;
+    // }
+    // else
+    // {
+    //   std::cout << "-ERR failed to dump database" << std::endl;
+    // }
   }
 }

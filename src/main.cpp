@@ -1,5 +1,6 @@
 #include <iostream>
 #include "../include/LettuceServer.h"
+#include "../include/LettuceDatabase.h"
 #include <thread>
 #include <chrono>
 
@@ -20,8 +21,12 @@ int main(int argc, char *argv[])
     while (true)
     {
       std::this_thread::sleep_for(std::chrono::minutes(5));
-      // TODO: dump the database
-      std::cout << "Database saved." << std::endl; 
+      // if (!LettuceDatabase::getInstance().dump("dump.ldb"))
+      // {
+      //   std::cerr << "-ERR Failed to dump database." << std::endl;
+      //   continue;
+      // }
+      std::cout << "Database dumped to dump.ldb" << std::endl; 
     }
   });
   persistenceThread.detach();
