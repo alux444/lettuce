@@ -17,8 +17,14 @@ TEST_CASE("parseRespCommand handles inline commands", "[resp]") {
     REQUIRE(tokens[1] == "TEST");
 }
 
-TEST_CASE("LettuceCommandHandler returns OK", "[handler]") {
+TEST_CASE("LettuceCommandHandler returns PONG from PING request", "[handler]") {
     LettuceCommandHandler handler;
     std::string resp = handler.handleCommand("*1\r\n$4\r\nPING\r\n");
     REQUIRE(resp.find("+PONG") != std::string::npos);
+}
+
+TEST_CASE("LettuceCommandHandler returns ERROR from UNKNOWN request", "[handler]") {
+    LettuceCommandHandler handler;
+    std::string resp = handler.handleCommand("*1\r\n$4\r\nHELLO\r\n");
+    REQUIRE(resp.find("-ERR") != std::string::npos);
 }

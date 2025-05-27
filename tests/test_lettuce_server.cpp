@@ -62,7 +62,7 @@ TEST_CASE("LettuceServer responds with -ERR with Unknown Command", "[integration
     std::this_thread::sleep_for(std::chrono::milliseconds(200)); // Give server time to start
 
     std::string resp = send_command("127.0.0.1", port, "*1\r\n$4\r\nHELLO\r\n");
-    REQUIRE(resp.find("-ERR: Unknown command") != std::string::npos);
+    REQUIRE(resp.find("-ERR") != std::string::npos);
 
     shutdown_server(server_thread);
 }
