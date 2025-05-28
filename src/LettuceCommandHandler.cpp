@@ -112,5 +112,7 @@ std::string LettuceCommandHandler::handleCommand(const std::string &commandLine)
     response << "-ERR: Unknown command\r\n";
   }
 
+  db.dump("dump.ldb");
+
   return response.str();
 }

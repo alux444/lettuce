@@ -21,11 +21,11 @@ int main(int argc, char *argv[])
     while (true)
     {
       std::this_thread::sleep_for(std::chrono::minutes(5));
-      // if (!LettuceDatabase::getInstance().dump("dump.ldb"))
-      // {
-      //   std::cerr << "-ERR Failed to dump database." << std::endl;
-      //   continue;
-      // }
+      if (!LettuceDatabase::getInstance().dump("dump.ldb"))
+      {
+        std::cerr << "-ERR Failed to dump database." << std::endl;
+        continue;
+      }
       std::cout << "Database dumped to dump.ldb" << std::endl; 
     }
   });

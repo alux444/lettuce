@@ -10,15 +10,13 @@
 #include <vector>
 #include <signal.h>
 
-#define DEBUG 0
-
 static LettuceServer *globalServer = nullptr;
 
 void signalHandler(int signum)
 {
   if (globalServer)
   {
-    std::cout << "Caught signal: " << signum << ", shutting down..." << std::endl;
+    std::cout << "\nCaught signal: " << signum << ", shutting down..." << std::endl;
     globalServer->shutdown();
   }
   exit(signum);
