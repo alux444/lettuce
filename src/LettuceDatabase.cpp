@@ -1,52 +1,57 @@
 #include "../include/LettuceDatabase.h"
 
 #include <string>
+#include <unordered_map>
+#include <iostream>
 #include <mutex>
 #include <fstream>
 #include <sstream>
 
-LettuceDatabase& LettuceDatabase::getInstance() {
+LettuceDatabase &LettuceDatabase::getInstance()
+{
   static LettuceDatabase instance;
   return instance;
 }
 
-bool LettuceDatabase::dump(const std::string& filename) {
+bool LettuceDatabase::dump(const std::string &filename)
+{
   // use mutex for thread safety
   std::lock_guard<std::mutex> lock(db_mutex);
   std::ofstream ofs(filename, std::ios::binary);
   if (!ofs)
     return false;
 
-  for (const auto& keyValue : keyValueStore) 
+  for (const auto &keyValue : keyValueStore)
   {
-    ofs << "K" << keyValue.first << " " << keyValue.second << "\n";
+    ofs << "K " << keyValue.first << " " << keyValue.second << "\n";
   }
 
-  for (const auto& keyList : listStore)
+  for (const auto &keyList : listStore)
   {
     ofs << "L " << keyList.first;
-    for (const auto& item : keyList.second)
+    for (const auto &item : keyList.second)
       ofs << " " << item;
     ofs << "\n";
   }
 
-  for (const auto& keyMap : hashStore)
+  for (const auto &keyMap : hashStore)
   {
     ofs << "H " << keyMap.first;
-    for (const auto& mapKeyValue : keyMap.second)
-      ofs << " " << mapKeyValue.first << ":" << mapKeyValue.second; 
+    for (const auto &mapKeyValue : keyMap.second)
+      ofs << " " << mapKeyValue.first << ":" << mapKeyValue.second;
     ofs << "\n";
   }
 
   return true;
 }
 
-bool LettuceDatabase::load(const std::string& filename) {
+bool LettuceDatabase::load(const std::string &filename)
+{
   std::lock_guard<std::mutex> lock(db_mutex);
   std::ifstream ifs(filename, std::ios::binary);
   if (!ifs)
     return false;
-  
+
   keyValueStore.clear();
   listStore.clear();
   hashStore.clear();
@@ -59,17 +64,39 @@ bool LettuceDatabase::load(const std::string& filename) {
     iss >> type;
     if (type == 'K')
     {
-
+      std::string key, value;
+      iss >> key >> value;
+      keyValueStore[key] = value;
     }
 
     if (type == 'L')
     {
-
+      std::string key;
+      iss >> key;
+      std::string item;
+      std::vector<std::string> values;
+      while (iss >> item)
+        values.push_back(item);
+      listStore[key] = values;
     }
 
-    if (type == 'M')
+    if (type == 'H')
     {
-
+      std::string key;
+      iss >> key;
+      std::string pair;
+      std::unordered_map<std::string, std::string> map;
+      while (iss >> pair)
+      {
+        int position = pair.find(':');
+        if (position != std::string::npos)
+        {
+          std::string key = pair.substr(0, position);
+          std::string value = pair.substr(position + 1);
+          map[key] = value;
+        }
+        hashStore[key] = map;
+      }
     }
   }
 

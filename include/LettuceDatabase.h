@@ -8,17 +8,17 @@
 class LettuceDatabase
 {
 public:
-  static LettuceDatabase& getInstance(); // singleton
+  std::unordered_map<std::string, std::string> keyValueStore;
+  std::unordered_map<std::string, std::vector<std::string>> listStore;
+  std::unordered_map<std::string, std::unordered_map<std::string, std::string>> hashStore;
+
+  static LettuceDatabase &getInstance(); // singleton
 
   bool dump(const std::string &filename);
   bool load(const std::string &filename);
 
 private:
   std::mutex db_mutex;
-  std::unordered_map<std::string, std::string> keyValueStore;
-  std::unordered_map<std::string, std::vector<std::string>> listStore;
-  std::unordered_map<std::string, std::unordered_map<std::string, std::string>> hashStore;
-
   LettuceDatabase() = default;                                  // default constructor
   ~LettuceDatabase() = default;                                 // default destructor
   LettuceDatabase(const LettuceDatabase &) = delete;            // deletes copy constructor
