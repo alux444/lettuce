@@ -13,6 +13,47 @@ LettuceDatabase &LettuceDatabase::getInstance()
   return instance;
 }
 
+bool LettuceDatabase::flushAll()
+{
+  return true;
+}
+
+void LettuceDatabase::set(const std::string &key, const std::string &value)
+{
+  return;
+}
+
+bool LettuceDatabase::get(const std::string &key, const std::string &value) const
+{
+  return true;
+}
+
+std::string LettuceDatabase::type(const std::string &key) const
+{
+  return "";
+}
+
+std::vector<std::string> LettuceDatabase::keys() const
+{
+  std::vector<std::string> v{};
+  return v;
+}
+
+bool LettuceDatabase::del(const std::string &key)
+{
+  return true;
+}
+
+bool LettuceDatabase::expire(const std::string& key, int seconds)
+{
+  return true;
+}
+
+bool LettuceDatabase::rename(const std::string &oldKey, const std::string &newKey)
+{
+  return true;
+}
+
 bool LettuceDatabase::dump(const std::string &filename)
 {
   // use mutex for thread safety

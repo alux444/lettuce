@@ -25,6 +25,18 @@ TEST_CASE("LettuceCommandHandler returns PONG from PING request", "[handler]") {
 
 TEST_CASE("LettuceCommandHandler returns ERROR from UNKNOWN request", "[handler]") {
     LettuceCommandHandler handler;
-    std::string resp = handler.handleCommand("*1\r\n$4\r\nHELLO\r\n");
-    REQUIRE(resp.find("-ERR") != std::string::npos);
+    std::string resp = handler.handleCommand("*1\r\n$5\r\nHELLO\r\n");
+    REQUIRE(resp.find("-ERR: Unknown command") != std::string::npos);
+}
+
+TEST_CASE("LettuceCommandHandler returns arguments from ECHO request", "[handler]") {
+    LettuceCommandHandler handler;
+    std::string resp = handler.handleCommand("*2\r\n$4\r\nECHO\r\n$5\r\nwat\r\n");
+    REQUIRE(resp.find("+wat") != std::string::npos);
+}
+
+TEST_CASE("LettuceCommandHandler enforces required argument for ECHO request", "[handler]") {
+    LettuceCommandHandler handler;
+    std::string resp = handler.handleCommand("*1\r\n$4\r\nECHO\r\n");
+    REQUIRE(resp.find("-ERR: ECHO requires an argument") != std::string::npos);
 }
