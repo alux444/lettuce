@@ -15,6 +15,10 @@ LettuceDatabase &LettuceDatabase::getInstance()
 
 bool LettuceDatabase::flushAll()
 {
+  std::lock_guard<std::mutex> lock(db_mutex);
+  keyValueStore.clear();
+  listStore.clear();
+  hashStore.clear();
   return true;
 }
 

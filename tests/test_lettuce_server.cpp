@@ -1,4 +1,5 @@
 #include <catch2/catch.hpp>
+#include "test_utils.h"
 #include <thread>
 #include <chrono>
 #include <sys/socket.h>
@@ -20,6 +21,7 @@ void shutdown_server(std::thread& server_thread) {
     server_thread.join();
     delete test_server;
     test_server = nullptr;
+    cleanup();
 }
 
 std::string send_command(const std::string& host, int port, const std::string& command) {
