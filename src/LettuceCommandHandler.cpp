@@ -139,7 +139,7 @@ std::string LettuceCommandHandler::handleCommand(const std::string &commandLine)
     else
     {
       const std::string& key = tokens[1];
-      const std::string& value = tokens[2];
+      std::string& value = tokens[2];
       if (db.get(key, value))
       {
         response << "$" << value.size() << "\r\n" << value << "\r\n";

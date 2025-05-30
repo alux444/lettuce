@@ -24,38 +24,122 @@ bool LettuceDatabase::flushAll()
 
 void LettuceDatabase::set(const std::string &key, const std::string &value)
 {
-  return;
+  std::lock_guard<std::mutex> lock(db_mutex);
+  keyValueStore[key] = value;
 }
 
-bool LettuceDatabase::get(const std::string &key, const std::string &value) const
+bool LettuceDatabase::get(const std::string &key, std::string &value)
 {
-  return true;
+  std::lock_guard<std::mutex> lock(db_mutex);
+  auto iterator = keyValueStore.find(key);
+  if (iterator != keyValueStore.end())
+  {
+    value = iterator->second;
+    return true;
+  }
+  return false;
 }
 
-std::string LettuceDatabase::type(const std::string &key) const
+std::string LettuceDatabase::type(const std::string &key)
 {
-  return "";
+  std::lock_guard<std::mutex> lock(db_mutex);
+  if (keyValueStore.find(key) != keyValueStore.end())
+  {
+    return "string";
+  }
+  if (listStore.find(key) != listStore.end())
+  {
+    return "list";
+  }
+  if (hashStore.find(key) != hashStore.end())
+  {
+    return "hash";
+  }
+  return "none";
 }
 
-std::vector<std::string> LettuceDatabase::keys() const
+std::vector<std::string> LettuceDatabase::keys()
 {
-  std::vector<std::string> v{};
-  return v;
+  std::lock_guard<std::mutex> lock(db_mutex);
+  std::vector<std::string> keys{};
+  for (const auto &pair : keyValueStore)
+  {
+    const std::string& key = pair.first;
+    keys.push_back(key);
+  }
+
+  for (const auto &pair : listStore)
+  {
+    const std::string& key = pair.first;
+    keys.push_back(key);
+  }
+
+  for (const auto &pair : hashStore)
+  {
+    const std::string& key = pair.first;
+    keys.push_back(key);
+  }
+  return keys;
 }
 
 bool LettuceDatabase::del(const std::string &key)
 {
-  return true;
+  std::lock_guard<std::mutex> lock(db_mutex);
+  bool erased = false;
+  erased |= keyValueStore.erase(key) > 0;
+  erased |= listStore.erase(key) > 0;
+  erased |= hashStore.erase(key) > 0;
+  return erased;
 }
 
-bool LettuceDatabase::expire(const std::string& key, int seconds)
+bool LettuceDatabase::expire(const std::string &key, int seconds)
 {
+  std::lock_guard<std::mutex> lock(db_mutex);
+  bool exists = (keyValueStore.find(key) != keyValueStore.end()) ||
+                (listStore.find(key) != listStore.end()) ||
+                (hashStore.find(key) != hashStore.end());
+  if (!exists)
+    return false;
+  expiryMap[key] = std::chrono::steady_clock::now() + std::chrono::seconds(seconds);
   return true;
 }
 
 bool LettuceDatabase::rename(const std::string &oldKey, const std::string &newKey)
 {
-  return true;
+  std::lock_guard<std::mutex> lock(db_mutex);
+  bool found = false;
+  auto iteratorKv = keyValueStore.find(oldKey);
+  if (iteratorKv != keyValueStore.end())
+  {
+    const std::string& value = iteratorKv->second;
+    keyValueStore[newKey] = value;
+    keyValueStore.erase(oldKey);
+    found = true;
+  }
+  auto iteratorList = listStore.find(oldKey);
+  if (iteratorList != listStore.end())
+  {
+    const std::vector<std::string>& value = iteratorList->second;
+    listStore[newKey] = value;
+    listStore.erase(oldKey);
+    found = true;
+  }
+  auto iteratorMap = hashStore.find(oldKey);
+  if (iteratorMap != hashStore.end())
+  {
+    const std::unordered_map<std::string, std::string>& value = iteratorMap->second;
+    hashStore[newKey] = value;
+    hashStore.erase(oldKey);
+    found = true;
+  }
+  auto iteratorExpiry = expiryMap.find(oldKey);
+  if (iteratorExpiry != expiryMap.end())
+  {
+    const std::chrono::steady_clock::time_point& value = iteratorExpiry->second;
+    expiryMap[newKey] = value;
+    expiryMap.erase(oldKey);
+  }
+  return found;
 }
 
 bool LettuceDatabase::dump(const std::string &filename)
