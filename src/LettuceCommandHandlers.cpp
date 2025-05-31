@@ -3,6 +3,7 @@
 #include <../include/LettuceDatabase.h>
 
 #include <string>
+#include <iostream>
 #include <sstream>
 #include <vector>
 
@@ -206,8 +207,8 @@ std::string handleLindex(const std::vector<std::string> &tokens, LettuceDatabase
   try
   {
     int index = std::stoi(tokens[2]);
-    std::string value{};
     const std::string &key = tokens[1];
+    std::string value{};
     if (db.lindex(key, index, value))
       return "$" + std::to_string(value.size()) + "\r\n" + value + "\r\n";
     return "$-1\r\n";

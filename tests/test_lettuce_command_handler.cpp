@@ -81,7 +81,8 @@ TEST_CASE("LettuceCommandHandler LREM removes elements", "[handler]")
 TEST_CASE("LettuceCommandHandler LINDEX gets element at index", "[handler]")
 {
     LettuceCommandHandler handler;
-    handler.handleCommand("*3\r\n$5\r\nRPUSH\r\n$6\r\nmylist\r\n$1\r\nz\r\n");
+    std::string rpush_resp = handler.handleCommand("*3\r\n$5\r\nLPUSH\r\n$6\r\nmylist\r\n$1\r\nz\r\n");
+    std::cout << "RESPOSNE RPUSH" << rpush_resp;
     std::string lindex_resp = handler.handleCommand("*3\r\n$6\r\nLINDEX\r\n$6\r\nmylist\r\n$1\r\n0\r\n");
     std::cout << "RESPOSNE LINDEX" << lindex_resp;
     REQUIRE(lindex_resp.find("$1\r\nz\r\n") != std::string::npos);
@@ -95,4 +96,24 @@ TEST_CASE("LettuceCommandHandler LSET sets element at index", "[handler]")
     REQUIRE(lset_resp.find("+OK") != std::string::npos);
     std::string lindex_resp = handler.handleCommand("*3\r\n$6\r\nLINDEX\r\n$6\r\nmylist\r\n$1\r\n0\r\n");
     REQUIRE(lindex_resp.find("$1\r\nf\r\n") != std::string::npos);
+}
+
+TEST_CASE("LettuceCommandHandler LPUSH adds elements to the left", "[handler]") {
+    LettuceCommandHandler handler;
+    handler.handleCommand("*3\r\n$5\r\nLPUSH\r\n$6\r\nmylist\r\n$1\r\na\r\n");
+    handler.handleCommand("*3\r\n$5\r\nLPUSH\r\n$6\r\nmylist\r\n$1\r\nb\r\n");
+    std::string lindex0 = handler.handleCommand("*3\r\n$6\r\nLINDEX\r\n$6\r\nmylist\r\n$1\r\n0\r\n");
+    std::string lindex1 = handler.handleCommand("*3\r\n$6\r\nLINDEX\r\n$6\r\nmylist\r\n$1\r\n1\r\n");
+    REQUIRE(lindex0.find("$1\r\nb\r\n") != std::string::npos); // b is now at the head
+    REQUIRE(lindex1.find("$1\r\na\r\n") != std::string::npos); // a is now at index 1
+}
+
+TEST_CASE("LettuceCommandHandler RPUSH adds elements to the right", "[handler]") {
+    LettuceCommandHandler handler;
+    handler.handleCommand("*3\r\n$5\r\nRPUSH\r\n$5\r\nlisty\r\n$1\r\nn\r\n");
+    handler.handleCommand("*3\r\n$5\r\nRPUSH\r\n$5\r\nlisty\r\n$1\r\nj\r\n");
+    std::string lindex0 = handler.handleCommand("*3\r\n$6\r\nLINDEX\r\n$5\r\nlisty\r\n$1\r\n0\r\n");
+    std::string lindex1 = handler.handleCommand("*3\r\n$6\r\nLINDEX\r\n$5\r\nlisty\r\n$1\r\n1\r\n");
+    REQUIRE(lindex0.find("$1\r\nn\r\n") != std::string::npos);
+    REQUIRE(lindex1.find("$1\r\nj\r\n") != std::string::npos);
 }

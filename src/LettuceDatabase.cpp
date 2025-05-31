@@ -291,7 +291,7 @@ bool LettuceDatabase::lindex(const std::string &key, int index, std::string &val
     index = list.size() + index;
   if (index < 0 || static_cast<size_t>(index) >= list.size())
     return false;
-  
+
   value = list[index];
   return true;
 }
@@ -307,7 +307,7 @@ bool LettuceDatabase::lset(const std::string &key, int index, const std::string 
     index = list.size() + index;
   if (index < 0 || static_cast<size_t>(index) >= list.size())
     return false;
-  
+
   list[index] = value;
   return true;
 }
