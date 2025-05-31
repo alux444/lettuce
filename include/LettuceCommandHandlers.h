@@ -13,3 +13,12 @@ std::string handleType(const std::vector<std::string>&, LettuceDatabase&);
 std::string handleDel(const std::vector<std::string>&, LettuceDatabase&);
 std::string handleExpire(const std::vector<std::string>&, LettuceDatabase&);
 std::string handleRename(const std::vector<std::string>&, LettuceDatabase&);
+
+std::string handleLlen(const std::vector<std::string>&, LettuceDatabase&);
+std::string handleLpush(const std::vector<std::string>&, LettuceDatabase&);
+std::string handleRpush(const std::vector<std::string>&, LettuceDatabase&);
+std::string handleLpop(const std::vector<std::string>&, LettuceDatabase&);
+std::string handleRpop(const std::vector<std::string>&, LettuceDatabase&);
+std::string handleLrem(const std::vector<std::string>&, LettuceDatabase&);
+std::string handleLindex(const std::vector<std::string>&, LettuceDatabase&);
+std::string handleLset(const std::vector<std::string>&, LettuceDatabase&);

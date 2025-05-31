@@ -100,50 +100,47 @@ std::string LettuceCommandHandler::handleCommand(const std::string &commandLine)
 
   if (command == "PING")
   {
-    response << handlePing(tokens, db);
+    return handlePing(tokens, db);
   }
   else if (command == "ECHO")
   {
-    response << handleEcho(tokens, db);
+    return handleEcho(tokens, db);
   }
   else if (command == "FLUSHALL")
   {
-    response << handleFlushAll(tokens, db);
+    return handleFlushAll(tokens, db);
   }
   else if (command == "SET")
   {
-    response << handleSet(tokens, db);
+    return handleSet(tokens, db);
   }
   else if (command == "GET")
   {
-    response << handleGet(tokens, db);
+    return handleGet(tokens, db);
   }
   else if (command == "KEYS")
   {
-    response << handleKeys(tokens, db);
+    return handleKeys(tokens, db);
   }
   else if (command == "TYPE")
   {
-    response << handleType(tokens, db);
+    return handleType(tokens, db);
   }
   else if (command == "DEL")
   {
-    response << handleDel(tokens, db);
+    return handleDel(tokens, db);
   }
   else if (command == "EXPIRE")
   {
-    response << handleExpire(tokens, db);
+    return handleExpire(tokens, db);
   }
   else if (command == "RENAME")
   {
-    response << handleRename(tokens, db);
+    return handleRename(tokens, db);
   }
-  else
+  else if (command == "LLEN")
   {
-    response << "-ERR: Unknown command\r\n";
+    return handleLlen(tokens, db);
   }
-
-  db.dump("dump.ldb");
-
-  return response.str();
+  return "-ERR: Unknown command\r\n";
 }

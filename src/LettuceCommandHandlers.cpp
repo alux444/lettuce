@@ -111,3 +111,43 @@ std::string handleRename(const std::vector<std::string> &vector, LettuceDatabase
   bool renamed = db.rename(oldKey, newKey);
   return ":" + std::to_string(renamed ? 1 : 0) + "\r\n";
 }
+
+std::string handleLlen(const std::vector<std::string> &vector, LettuceDatabase &db)
+{
+  return "";
+}
+
+std::string handleLpush(const std::vector<std::string> &vector, LettuceDatabase &db)
+{
+  return "";
+}
+
+std::string handleRpush(const std::vector<std::string> &vector, LettuceDatabase &db)
+{
+  return "";
+}
+
+std::string handleLpop(const std::vector<std::string> &vector, LettuceDatabase &db)
+{
+  return "";
+}
+
+std::string handleRpop(const std::vector<std::string> &vector, LettuceDatabase &db)
+{
+  return "";
+}
+
+std::string handleLrem(const std::vector<std::string> &vector, LettuceDatabase &db)
+{
+  return "";
+}
+
+std::string handleLindex(const std::vector<std::string> &vector, LettuceDatabase &db)
+{
+  return "";
+}
+
+std::string handleLset(const std::vector<std::string> &vector, LettuceDatabase &db)
+{
+  return "";
+}
