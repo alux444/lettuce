@@ -111,7 +111,6 @@ void LettuceServer::run()
 
           std::cout << "Waiting for command..." << std::endl;
           int receivedBytes = recv(clientSocket, buffer, sizeof(buffer)-1, 0); // read up to 1023 bytes from the client
-          std::cout << "Received " << receivedBytes << " bytes." << std::endl;
 
           if (receivedBytes <= 0)
           {

@@ -160,7 +160,7 @@ std::string handleLpop(const std::vector<std::string> &tokens, LettuceDatabase &
   const std::string &key = tokens[1];
   std::string value {};
   if (db.lpop(key, value))
-    return "$" + std::to_string(value.size()) + "\r\n";
+    return "$" + std::to_string(value.size()) + "\r\n" + value + "\r\n";
   return "$-1\r\n";
 }
 
@@ -173,7 +173,7 @@ std::string handleRpop(const std::vector<std::string> &tokens, LettuceDatabase &
   const std::string &key = tokens[1];
   std::string value {};
   if (db.rpop(key, value))
-    return "$" + std::to_string(value.size()) + "\r\n";
+    return "$" + std::to_string(value.size()) + "\r\n" + value + "\r\n";
   return "$-1\r\n";
 }
 
