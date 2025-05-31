@@ -133,3 +133,88 @@ TEST_CASE("LettuceDatabase expire and rename", "[database]")
 
     cleanup();
 }
+
+TEST_CASE("LettuceDatabase llen returns correct length", "[database]")
+{
+    LettuceDatabase &db = LettuceDatabase::getInstance();
+    db.flushAll();
+
+    db.lpush("mylist", "a");
+    db.rpush("mylist", "b");
+    db.rpush("mylist", "c");
+    REQUIRE(db.llen("mylist") == 3);
+
+    cleanup();
+}
+
+TEST_CASE("LettuceDatabase lpop and rpop remove elements", "[database]")
+{
+    LettuceDatabase &db = LettuceDatabase::getInstance();
+    db.flushAll();
+
+    db.rpush("mylist", "x");
+    db.rpush("mylist", "y");
+    db.rpush("mylist", "z");
+
+    std::string val;
+    REQUIRE(db.lpop("mylist", val));
+    REQUIRE(val == "x");
+    REQUIRE(db.rpop("mylist", val));
+    REQUIRE(val == "z");
+    REQUIRE(db.llen("mylist") == 1);
+
+    cleanup();
+}
+
+TEST_CASE("LettuceDatabase lrem removes correct elements", "[database]")
+{
+    LettuceDatabase &db = LettuceDatabase::getInstance();
+    db.flushAll();
+
+    db.rpush("mylist", "a");
+    db.rpush("mylist", "b");
+    db.rpush("mylist", "a");
+    db.rpush("mylist", "a");
+    db.rpush("mylist", "c");
+
+    // Remove all "a"
+    REQUIRE(db.lrem("mylist", 0, "a") == 3);
+    REQUIRE(db.llen("mylist") == 2);
+
+    cleanup();
+}
+
+TEST_CASE("LettuceDatabase lindex gets correct element", "[database]")
+{
+    LettuceDatabase &db = LettuceDatabase::getInstance();
+    db.flushAll();
+
+    db.rpush("mylist", "foo");
+    db.rpush("mylist", "bar");
+    db.rpush("mylist", "baz");
+
+    std::string val;
+    REQUIRE(db.lindex("mylist", 1, val));
+    REQUIRE(val == "bar");
+    REQUIRE(db.lindex("mylist", -1, val));
+    REQUIRE(val == "baz");
+
+    cleanup();
+}
+
+TEST_CASE("LettuceDatabase lset sets correct element", "[database]")
+{
+    LettuceDatabase &db = LettuceDatabase::getInstance();
+    db.flushAll();
+
+    db.rpush("mylist", "one");
+    db.rpush("mylist", "two");
+    db.rpush("mylist", "three");
+
+    REQUIRE(db.lset("mylist", 1, "TWO"));
+    std::string val;
+    REQUIRE(db.lindex("mylist", 1, val));
+    REQUIRE(val == "TWO");
+
+    cleanup();
+}

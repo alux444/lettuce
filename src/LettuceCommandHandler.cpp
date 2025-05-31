@@ -142,5 +142,33 @@ std::string LettuceCommandHandler::handleCommand(const std::string &commandLine)
   {
     return handleLlen(tokens, db);
   }
+  else if (command == "LPUSH")
+  {
+    return handleLpush(tokens, db);
+  }
+  else if (command == "RPUSH")
+  {
+    return handleRpush(tokens, db);
+  }
+  else if (command == "LPOP")
+  {
+    return handleLpop(tokens, db);
+  }
+  else if (command == "RPOP")
+  {
+    return handleRpop(tokens, db);
+  }
+  else if (command == "LREM")
+  {
+    return handleLrem(tokens, db);
+  }
+  else if (command == "LINDEX")
+  {
+    return handleLindex(tokens, db);
+  }
+  else if (command == "LSET")
+  {
+    return handleLset(tokens, db);
+  }
   return "-ERR: Unknown command\r\n";
 }

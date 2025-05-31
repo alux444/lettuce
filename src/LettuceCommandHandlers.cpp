@@ -158,7 +158,7 @@ std::string handleLpop(const std::vector<std::string> &tokens, LettuceDatabase &
     return "-ERR: LPOP requires a KEY\r\n";
   }
   const std::string &key = tokens[1];
-  const std::string &value = tokens[2];
+  std::string value {};
   if (db.lpop(key, value))
     return "$" + std::to_string(value.size()) + "\r\n";
   return "$-1\r\n";
@@ -171,7 +171,7 @@ std::string handleRpop(const std::vector<std::string> &tokens, LettuceDatabase &
     return "-ERR: RPOP requires a KEY\r\n";
   }
   const std::string &key = tokens[1];
-  const std::string &value = tokens[2];
+  std::string value {};
   if (db.rpop(key, value))
     return "$" + std::to_string(value.size()) + "\r\n";
   return "$-1\r\n";
