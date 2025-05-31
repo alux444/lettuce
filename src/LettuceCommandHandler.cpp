@@ -81,15 +81,121 @@ std::vector<std::string> parseRespCommand(const std::string &input)
 
 LettuceCommandHandler::LettuceCommandHandler() {}
 
+static std::string handlePing(const std::vector<std::string> &vector, LettuceDatabase &db)
+{
+  return "+PONG\r\n";
+}
+
+static std::string handleEcho(const std::vector<std::string> &vector, LettuceDatabase &db)
+{
+  if (vector.size() < 2)
+  {
+    return "-ERR: ECHO requires an argument\r\n";
+  }
+  return "+" + vector[1] + "\r\n";
+}
+
+static std::string handleFlushAll(const std::vector<std::string> &vector, LettuceDatabase &db)
+{
+  db.flushAll();
+  return "+OK\r\n";
+}
+
+static std::string handleSet(const std::vector<std::string> &vector, LettuceDatabase &db)
+{
+  if (vector.size() < 3)
+  {
+    return "-ERR: SET expects 2 arguments - key and value\r\n";
+  }
+  const std::string &key = vector[1];
+  const std::string &value = vector[2];
+  db.set(key, value);
+  return "+OK\r\n";
+}
+
+static std::string handleGet(const std::vector<std::string> &vector, LettuceDatabase &db)
+{
+  if (vector.size() < 2)
+  {
+    return "-ERR: GET requires a key\r\n";
+  }
+  const std::string &key = vector[1];
+  std::string value;
+  if (db.get(key, value))
+  {
+    return "$" + std::to_string(value.size()) + "\r\n" + value + "\r\n";
+  }
+  return "$-1\r\n";
+}
+
+static std::string handleKeys(const std::vector<std::string> &vector, LettuceDatabase &db)
+{
+  std::vector<std::string> allKeys = db.keys();
+  std::ostringstream response;
+  response << "*" << allKeys.size() << "\r\n";
+  for (const auto &key : allKeys)
+  {
+    response << "$" << key.size() << "\r\n"
+             << key << "\r\n";
+  }
+  return response.str();
+}
+
+static std::string handleType(const std::vector<std::string> &vector, LettuceDatabase &db)
+{
+  if (vector.size() < 2)
+  {
+    return "-ERR: TYPE requires a KEY argument\r\n";
+  }
+  const std::string &key = vector[1];
+  const std::string &type = db.type(key);
+  return "+" + type + "\r\n";
+}
+
+static std::string handleDel(const std::vector<std::string> &vector, LettuceDatabase &db)
+{
+  if (vector.size() < 2)
+  {
+    return "-ERR: DEL requires a KEY argument\r\n";
+  }
+  const std::string &key = vector[1];
+  bool deleted = db.del(key);
+  return ":" + std::to_string(deleted ? 1 : 0) + "\r\n";
+}
+
+static std::string handleExpire(const std::vector<std::string> &vector, LettuceDatabase &db)
+{
+  if (vector.size() < 3)
+  {
+    return "-ERR: EXPIRE requires a KEY and TIME in seconds\r\n";
+  }
+  const std::string &key = vector[1];
+  int timeInSeconds = std::stoi(vector[2]);
+  bool expired = db.expire(key, timeInSeconds);
+  return ":" + std::to_string(expired ? 1 : 0) + "\r\n";
+}
+
+static std::string handleRename(const std::vector<std::string> &vector, LettuceDatabase &db)
+{
+  if (vector.size() < 3)
+  {
+    return "-ERR: RENAME requires an OLD KEY VALUE and NEW KEY VALUE\r\n";
+  }
+  const std::string &oldKey = vector[1];
+  const std::string &newKey = vector[2];
+  bool renamed = db.rename(oldKey, newKey);
+  return ":" + std::to_string(renamed ? 1 : 0) + "\r\n";
+}
+
 std::string LettuceCommandHandler::handleCommand(const std::string &commandLine)
 {
   std::vector<std::string> tokens = parseRespCommand(commandLine);
 
   if (tokens.empty())
   {
-    return "-ERR empty command\r\n";
+    return "-ERR: empty command\r\n";
   }
-  
+
   std::string command = tokens[0];
   std::cout << "Got command: " << command << std::endl;
   std::transform(command.begin(), command.end(), command.begin(), ::toupper);
@@ -99,119 +205,43 @@ std::string LettuceCommandHandler::handleCommand(const std::string &commandLine)
 
   if (command == "PING")
   {
-    response << "+PONG\r\n";
+    response << handlePing(tokens, db);
   }
   else if (command == "ECHO")
   {
-    if (tokens.size() < 2)
-    {
-      response << "-ERR: ECHO requires an argument\r\n";
-    }
-    else
-    {
-      response << "+" << tokens[1];
-    }
+    response << handleEcho(tokens, db);
   }
   else if (command == "FLUSHALL")
   {
-    db.flushAll();
+    response << handleFlushAll(tokens, db);
   }
   else if (command == "SET")
   {
-    if (tokens.size() < 3)
-    {
-      response << "-ERR: SET expects 2 arguments - key and value\r\n";
-    }
-    else
-    {
-      const std::string& key = tokens[1];
-      const std::string& value = tokens[2];
-      db.set(key, value);
-      response << "+OK";
-    }
+    response << handleSet(tokens, db);
   }
   else if (command == "GET")
   {
-    if (tokens.size() < 2)
-    {
-      response << "-ERR: GET requires a key\r\n";
-    }
-    else
-    {
-      const std::string& key = tokens[1];
-      std::string& value = tokens[2];
-      if (db.get(key, value))
-      {
-        response << "$" << value.size() << "\r\n" << value << "\r\n";
-      }
-      else
-      {
-        response << "$-1\r\n";
-      }
-    }
+    response << handleGet(tokens, db);
   }
   else if (command == "KEYS")
   {
-    std::vector<std::string> allKeys = db.keys();
-    response << "*" << allKeys.size() << "\r\n";
-    for (const auto& key : allKeys)
-    {
-      response << "$" << key.size() << "/r/n" << key << "/r/n";
-    }
+    response << handleKeys(tokens, db);
   }
   else if (command == "TYPE")
   {
-    if (tokens.size() < 2)
-    {
-      response << "-ERR: TYPE requires a KEY argument\r\n";
-    }
-    else
-    {
-      const std::string& key = tokens[1];
-      const std::string& type = db.type(key);
-      response << "+" << type << "\r\n";
-    }
+    response << handleType(tokens, db);
   }
   else if (command == "DEL")
   {
-    if (tokens.size() < 2)
-    {
-      response << "-ERR: DEL requires a KEY argument\r\n";
-    }
-    else
-    {
-      const std::string& key = tokens[1];
-      bool deleted = db.del(key);
-      response << ":" << (deleted ? 1 : 0) << "\r\n";
-    }
+    response << handleDel(tokens, db);
   }
   else if (command == "EXPIRE")
   {
-    if (tokens.size() < 3)
-    {
-      response << "-ERR: EXPIRE requires a KEY and TIME in seconds\r\n";
-    }
-    else
-    {
-      const std::string& key = tokens[1];
-      const int& timeInSeconds = std::stoi(tokens[2]);
-      bool expired = db.expire(key, timeInSeconds);
-      response << ":" << (expired ? 1 : 0) << "\r\n";
-    }
+    response << handleExpire(tokens, db);
   }
   else if (command == "RENAME")
   {
-    if (tokens.size() < 3)
-    {
-      response << "ERR: RENAME requires an OLD KEY VALUE and NEW KEY VALUE\r\n";
-    }
-    else
-    {
-      const std::string& oldKey = tokens[1];
-      const std::string& newKey = tokens[2];
-      bool renamed = db.rename(oldKey, newKey);
-      response << ":" << (renamed ? 1 : 0) << "\r\n";
-    }
+    response << handleRename(tokens, db);
   }
   else
   {

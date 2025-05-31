@@ -77,7 +77,7 @@ void LettuceServer::run()
 
   if (listen(serverSocket, 10) < 0)
   {
-    std::cerr << "Error listening on socket." << std::endl;
+    std::cerr << "ERR: Failed listening on socket." << std::endl;
     return;
   }
 
@@ -115,7 +115,7 @@ void LettuceServer::run()
 
           if (receivedBytes <= 0)
           {
-            std::cerr << "-ERR Failed to receive data or client disconnected." << std::endl;
+            std::cerr << "-ERR: Failed to receive data or client disconnected." << std::endl;
             close(clientSocket);
             return;
           }
@@ -139,7 +139,7 @@ void LettuceServer::run()
     }
     else
     {
-      std::cout << "-ERR failed to dump database" << std::endl;
+      std::cout << "-ERR: failed to dump database" << std::endl;
     }
   }
 }

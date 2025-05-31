@@ -14,6 +14,17 @@ int main(int argc, char *argv[])
     port = std::stoi(argv[1]);
   }
 
+  std::string databaseFilename = "dump.ldb";
+
+  if (LettuceDatabase::getInstance().load(databaseFilename))
+  {
+    std::cout << "Database loaded from dump.ldb\n";
+  }
+  else
+  {
+    std::cout << "No dump.ldb file found\n";
+  }
+
   LettuceServer server(port);
 
   // every 5 mins save database
@@ -23,7 +34,7 @@ int main(int argc, char *argv[])
       std::this_thread::sleep_for(std::chrono::minutes(5));
       if (!LettuceDatabase::getInstance().dump("dump.ldb"))
       {
-        std::cerr << "-ERR Failed to dump database." << std::endl;
+        std::cerr << "-ERR: Failed to dump database." << std::endl;
         continue;
       }
       std::cout << "Database dumped to dump.ldb" << std::endl; 
