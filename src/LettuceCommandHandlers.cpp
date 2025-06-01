@@ -263,8 +263,9 @@ std::string handleHget(const std::vector<std::string> &tokens, LettuceDatabase &
   const std::string key = tokens[1];
   const std::string field = tokens[2];
   const std::string value = tokens[3];
-  db.hget(key, field, value);
-  return ":1\r\n";
+  if (db.hget(key, field, value))
+    return "$" + std::to_string(value.size()) + "\r\n" + value + "\r\n";
+  return "$-1\r\n";
 }
 
 std::string handleHexists(const std::vector<std::string> &tokens, LettuceDatabase &db)
@@ -273,7 +274,10 @@ std::string handleHexists(const std::vector<std::string> &tokens, LettuceDatabas
   {
     return "-ERR: HEXISTS requires a KEY and FIELD\r\n";
   }
-  return ":1\r\n";
+  const std::string key = tokens[1];
+  const std::string field = tokens[2];
+  bool exists = (db.hexists(key, field));
+  return ":" + std::to_string(exists ? 1 : 0) + "\r\n";
 }
 
 std::string handleHdel(const std::vector<std::string> &tokens, LettuceDatabase &db)
@@ -282,7 +286,10 @@ std::string handleHdel(const std::vector<std::string> &tokens, LettuceDatabase &
   {
     return "-ERR: HDEL requires a KEY and FIELD\r\n";
   }
-  return ":1\r\n";
+  const std::string key = tokens[1];
+  const std::string field = tokens[2];
+  bool deleted = db.hdel(key, field);
+  return ":" + std::to_string(deleted ? 1 : 0) + "\r\n";
 }
 
 std::string handleHgetall(const std::vector<std::string> &tokens, LettuceDatabase &db)
@@ -291,16 +298,34 @@ std::string handleHgetall(const std::vector<std::string> &tokens, LettuceDatabas
   {
     return "-ERR: HGETALL requires a KEY\r\n";
   }
-  return ":1\r\n";
+  const std::string key = tokens[1];
+  auto hash = db.hgetall(key);
+  std::ostringstream oss;
+  oss << "*" << hash.size() * 2 << "\r\n"; // two strings per hash
+  for (const auto &[key, value] : hash)
+  {
+    oss << "$" << key.size() << "\r\n"
+        << key << "\r\n";
+    oss << "$" << value.size() << "\r\n"
+        << value << "\r\n";
+  }
+  return oss.str();
 }
 
-std::string handleHkets(const std::vector<std::string> &tokens, LettuceDatabase &db)
+std::string handleHkeys(const std::vector<std::string> &tokens, LettuceDatabase &db)
 {
   if (tokens.size() < 2)
   {
     return "-ERR: HGETALL requires a KEY\r\n";
   }
-  return ":1\r\n";
+  const std::string key = tokens[1];
+  auto keys = db.hkeys(key);
+  std::ostringstream oss;
+  oss << "*" << keys.size() << "\r\n";
+  for (const auto &key : keys)
+    oss << "$" << key.size() << "\r\n"
+        << key << "\r\n";
+  return oss.str();
 }
 
 std::string handleHvals(const std::vector<std::string> &tokens, LettuceDatabase &db)
@@ -309,7 +334,14 @@ std::string handleHvals(const std::vector<std::string> &tokens, LettuceDatabase 
   {
     return "-ERR: HVALS requires a KEY\r\n";
   }
-  return ":1\r\n";
+  const std::string key = tokens[1];
+  auto values = db.hvals(key);
+  std::ostringstream oss;
+  oss << "*" << values.size() << "\r\n";
+  for (const auto &value : values)
+    oss << "$" << value.size() << "\r\n"
+        << value << "\r\n";
+  return oss.str();
 }
 
 std::string handleHlen(const std::vector<std::string> &tokens, LettuceDatabase &db)
@@ -318,7 +350,9 @@ std::string handleHlen(const std::vector<std::string> &tokens, LettuceDatabase &
   {
     return "-ERR: HLEN requires a KEY\r\n";
   }
-  return ":1\r\n";
+  const std::string key = tokens[1];
+  size_t len = db.hlen(key);
+  return ":" + std::to_string(len) + "\r\n";
 }
 
 std::string handleHmset(const std::vector<std::string> &tokens, LettuceDatabase &db)
@@ -327,5 +361,14 @@ std::string handleHmset(const std::vector<std::string> &tokens, LettuceDatabase 
   {
     return "-ERR: HMSET requires a KEY following by FIELD and VALUE\r\n";
   }
-  return ":1\r\n";
+  const std::string key = tokens[1];
+  std::vector<std::pair<std::string, std::string>> fieldValues;
+  for (size_t i = 2; i < tokens.size(); i += 2)
+  {
+    const std::string field = tokens[i];
+    const std::string value = tokens[i + 1];
+    fieldValues.emplace_back(field, value);
+  }
+  db.hmset(key, fieldValues);
+  return "+OK\r\n";
 }
