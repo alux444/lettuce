@@ -203,6 +203,15 @@ bool LettuceDatabase::dump(const std::string &filename)
 }
 
 /* List operations*/
+std::vector<std::string> LettuceDatabase::lget(const std::string &key)
+{
+  std::lock_guard<std::mutex> lock(db_mutex);
+  purgeExpired();
+  if (listStore.find(key) != listStore.end())
+    return listStore[key];
+  return {};
+}
+
 size_t LettuceDatabase::llen(const std::string &key)
 {
   std::lock_guard<std::mutex> lock(db_mutex);

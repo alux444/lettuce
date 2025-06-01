@@ -49,6 +49,29 @@ TEST_CASE("LettuceCommandHandler enforces required argument for ECHO request", "
     REQUIRE(resp.find("-ERR: ECHO requires an argument") != std::string::npos);
 }
 
+TEST_CASE("LettuceCommandHandler LGET returns all list elements", "[handler]")
+{
+    LettuceCommandHandler handler;
+    handler.handleCommand("*3\r\n$5\r\nRPUSH\r\n$6\r\naalist\r\n$1\r\nx\r\n");
+    handler.handleCommand("*3\r\n$5\r\nRPUSH\r\n$6\r\naalist\r\n$1\r\ny\r\n");
+    handler.handleCommand("*3\r\n$5\r\nLPUSH\r\n$6\r\naalist\r\n$1\r\nz\r\n");
+    std::string lget_resp = handler.handleCommand("*2\r\n$4\r\nLGET\r\n$6\r\naalist\r\n");
+    // Should be z, x, y
+    REQUIRE(lget_resp.find("$1\r\nz\r\n") != std::string::npos);
+    REQUIRE(lget_resp.find("$1\r\nx\r\n") != std::string::npos);
+    REQUIRE(lget_resp.find("$1\r\ny\r\n") != std::string::npos);
+    // Should have 3 elements in RESP array
+    REQUIRE(lget_resp.find("*3\r\n") == 0);
+}
+
+TEST_CASE("LettuceCommandHandler LGET on empty or missing list", "[handler]")
+{
+    LettuceCommandHandler handler;
+    std::string lget_resp = handler.handleCommand("*2\r\n$4\r\nLGET\r\n$6\r\nnope\r\n");
+    // Should be an empty RESP array
+    REQUIRE(lget_resp == "*0\r\n");
+}
+
 TEST_CASE("LettuceCommandHandler LLEN returns correct length", "[handler]")
 {
     LettuceCommandHandler handler;

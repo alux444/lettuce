@@ -14,6 +14,7 @@ std::string handleDel(const std::vector<std::string>&, LettuceDatabase&);
 std::string handleExpire(const std::vector<std::string>&, LettuceDatabase&);
 std::string handleRename(const std::vector<std::string>&, LettuceDatabase&);
 
+std::string handleLget(const std::vector<std::string>&, LettuceDatabase&);
 std::string handleLlen(const std::vector<std::string>&, LettuceDatabase&);
 std::string handleLpush(const std::vector<std::string>&, LettuceDatabase&);
 std::string handleRpush(const std::vector<std::string>&, LettuceDatabase&);

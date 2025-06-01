@@ -118,6 +118,8 @@ std::string LettuceCommandHandler::handleCommand(const std::string &commandLine)
     return handleExpire(tokens, db);
   else if (command == "RENAME")
     return handleRename(tokens, db);
+  else if (command == "LGET")
+    return handleLget(tokens, db);
   else if (command == "LLEN")
     return handleLlen(tokens, db);
   else if (command == "LPUSH")

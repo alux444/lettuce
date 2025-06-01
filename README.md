@@ -47,6 +47,7 @@ Implements a subset of the Redis protocol (RESP) and supports basic persistence.
 
 | Command | Example (RESP)                                               | Description                  |
 | ------- | ------------------------------------------------------------ | ---------------------------- |
+| LGET    | `*2\r\n$4\r\nLGET\r\n$5\r\nmylist\r\n`                       | Returns values in the list   |
 | LLEN    | `*2\r\n$4\r\nLLEN\r\n$5\r\nmylist\r\n`                       | Returns length of list       |
 | LPUSH   | `*3\r\n$5\r\nLPUSH\r\n$5\r\nmylist\r\n$1\r\na\r\n`           | Pushes value to head of list |
 | RPUSH   | `*3\r\n$5\r\nRPUSH\r\n$5\r\nmylist\r\n$1\r\nb\r\n`           | Pushes value to tail of list |

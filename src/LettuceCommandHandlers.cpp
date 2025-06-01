@@ -115,6 +115,22 @@ std::string handleRename(const std::vector<std::string> &tokens, LettuceDatabase
 }
 
 /* List related operations */
+std::string handleLget(const std::vector<std::string> &tokens, LettuceDatabase &db)
+{
+  if (tokens.size() < 2)
+  {
+    return "-ERR: LGET requires a KEY\r\n";
+  }
+  const std::string &key = tokens[1];
+  std::vector<std::string> list = db.lget(key);
+  std::ostringstream oss;
+  oss << "*" << list.size() << "\r\n";
+  for (const auto &value : list)
+    oss << "$" << value.size() << "\r\n"
+        << value << "\r\n";
+  return oss.str();
+}
+
 std::string handleLlen(const std::vector<std::string> &tokens, LettuceDatabase &db)
 {
   if (tokens.size() < 2)

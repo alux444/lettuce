@@ -32,6 +32,7 @@ public:
   bool rename(const std::string &oldKey, const std::string &newKey);
 
   // list
+  std::vector<std::string> lget(const std::string &key);
   size_t llen(const std::string &key);
   void lpush(const std::string &key, const std::string &value);
   void rpush(const std::string &key, const std::string &value);
