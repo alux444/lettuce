@@ -40,6 +40,9 @@ public:
   bool lindex(const std::string& key, int index, std::string& value);
   bool lset(const std::string& key, int index, const std::string& value);
 
+  // hashes
+  bool hset(const std::string& key, const std::string field, const std::string value);
+  bool hget(const std::string& key, const std::string field, std::string value);
 private:
   std::mutex db_mutex;
   LettuceDatabase() = default;                                  // default constructor

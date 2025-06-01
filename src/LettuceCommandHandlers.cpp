@@ -114,7 +114,7 @@ std::string handleRename(const std::vector<std::string> &tokens, LettuceDatabase
   return ":" + std::to_string(renamed ? 1 : 0) + "\r\n";
 }
 
-/* List related operations*/
+/* List related operations */
 std::string handleLlen(const std::vector<std::string> &tokens, LettuceDatabase &db)
 {
   if (tokens.size() < 2)
@@ -159,7 +159,7 @@ std::string handleLpop(const std::vector<std::string> &tokens, LettuceDatabase &
     return "-ERR: LPOP requires a KEY\r\n";
   }
   const std::string &key = tokens[1];
-  std::string value {};
+  std::string value{};
   if (db.lpop(key, value))
     return "$" + std::to_string(value.size()) + "\r\n" + value + "\r\n";
   return "$-1\r\n";
@@ -172,7 +172,7 @@ std::string handleRpop(const std::vector<std::string> &tokens, LettuceDatabase &
     return "-ERR: RPOP requires a KEY\r\n";
   }
   const std::string &key = tokens[1];
-  std::string value {};
+  std::string value{};
   if (db.rpop(key, value))
     return "$" + std::to_string(value.size()) + "\r\n" + value + "\r\n";
   return "$-1\r\n";
@@ -238,4 +238,94 @@ std::string handleLset(const std::vector<std::string> &tokens, LettuceDatabase &
   {
     return "-ERR: Invalid index value\r\n";
   }
+}
+
+/* Hash operations */
+std::string handleHset(const std::vector<std::string> &tokens, LettuceDatabase &db)
+{
+  if (tokens.size() < 4)
+  {
+    return "-ERR: HSET requires a KEY, FIELD and VALUE\r\n";
+  }
+  const std::string key = tokens[1];
+  const std::string field = tokens[2];
+  const std::string value = tokens[3];
+  db.hset(key, field, value);
+  return ":1\r\n";
+}
+
+std::string handleHget(const std::vector<std::string> &tokens, LettuceDatabase &db)
+{
+  if (tokens.size() < 3)
+  {
+    return "-ERR: HSET requires a KEY and FIELD\r\n";
+  }
+  const std::string key = tokens[1];
+  const std::string field = tokens[2];
+  const std::string value = tokens[3];
+  db.hget(key, field, value);
+  return ":1\r\n";
+}
+
+std::string handleHexists(const std::vector<std::string> &tokens, LettuceDatabase &db)
+{
+  if (tokens.size() < 3)
+  {
+    return "-ERR: HEXISTS requires a KEY and FIELD\r\n";
+  }
+  return ":1\r\n";
+}
+
+std::string handleHdel(const std::vector<std::string> &tokens, LettuceDatabase &db)
+{
+  if (tokens.size() < 3)
+  {
+    return "-ERR: HDEL requires a KEY and FIELD\r\n";
+  }
+  return ":1\r\n";
+}
+
+std::string handleHgetall(const std::vector<std::string> &tokens, LettuceDatabase &db)
+{
+  if (tokens.size() < 2)
+  {
+    return "-ERR: HGETALL requires a KEY\r\n";
+  }
+  return ":1\r\n";
+}
+
+std::string handleHkets(const std::vector<std::string> &tokens, LettuceDatabase &db)
+{
+  if (tokens.size() < 2)
+  {
+    return "-ERR: HGETALL requires a KEY\r\n";
+  }
+  return ":1\r\n";
+}
+
+std::string handleHvals(const std::vector<std::string> &tokens, LettuceDatabase &db)
+{
+  if (tokens.size() < 2)
+  {
+    return "-ERR: HVALS requires a KEY\r\n";
+  }
+  return ":1\r\n";
+}
+
+std::string handleHlen(const std::vector<std::string> &tokens, LettuceDatabase &db)
+{
+  if (tokens.size() < 2)
+  {
+    return "-ERR: HLEN requires a KEY\r\n";
+  }
+  return ":1\r\n";
+}
+
+std::string handleHmset(const std::vector<std::string> &tokens, LettuceDatabase &db)
+{
+  if (tokens.size() < 4 || (tokens.size() % 2 == 1))
+  {
+    return "-ERR: HMSET requires a KEY following by FIELD and VALUE\r\n";
+  }
+  return ":1\r\n";
 }

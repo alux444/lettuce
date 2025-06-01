@@ -22,3 +22,13 @@ std::string handleRpop(const std::vector<std::string>&, LettuceDatabase&);
 std::string handleLrem(const std::vector<std::string>&, LettuceDatabase&);
 std::string handleLindex(const std::vector<std::string>&, LettuceDatabase&);
 std::string handleLset(const std::vector<std::string>&, LettuceDatabase&);
+
+std::string handleHset(const std::vector<std::string>&, LettuceDatabase&);
+std::string handleHget(const std::vector<std::string>&, LettuceDatabase&);
+std::string handleHexists(const std::vector<std::string>&, LettuceDatabase&);
+std::string handleHdel(const std::vector<std::string>&, LettuceDatabase&);
+std::string handleHgetall(const std::vector<std::string>&, LettuceDatabase&);
+std::string handleHkeys(const std::vector<std::string>&, LettuceDatabase&);
+std::string handleHvals(const std::vector<std::string>&, LettuceDatabase&);
+std::string handleHlen(const std::vector<std::string>&, LettuceDatabase&);
+std::string handleHmset(const std::vector<std::string>&, LettuceDatabase&);

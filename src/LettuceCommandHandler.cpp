@@ -99,76 +99,58 @@ std::string LettuceCommandHandler::handleCommand(const std::string &commandLine)
   LettuceDatabase &db = LettuceDatabase::getInstance();
 
   if (command == "PING")
-  {
     return handlePing(tokens, db);
-  }
   else if (command == "ECHO")
-  {
     return handleEcho(tokens, db);
-  }
   else if (command == "FLUSHALL")
-  {
     return handleFlushAll(tokens, db);
-  }
   else if (command == "SET")
-  {
     return handleSet(tokens, db);
-  }
   else if (command == "GET")
-  {
     return handleGet(tokens, db);
-  }
   else if (command == "KEYS")
-  {
     return handleKeys(tokens, db);
-  }
   else if (command == "TYPE")
-  {
     return handleType(tokens, db);
-  }
   else if (command == "DEL")
-  {
     return handleDel(tokens, db);
-  }
   else if (command == "EXPIRE")
-  {
     return handleExpire(tokens, db);
-  }
   else if (command == "RENAME")
-  {
     return handleRename(tokens, db);
-  }
   else if (command == "LLEN")
-  {
     return handleLlen(tokens, db);
-  }
   else if (command == "LPUSH")
-  {
     return handleLpush(tokens, db);
-  }
   else if (command == "RPUSH")
-  {
     return handleRpush(tokens, db);
-  }
   else if (command == "LPOP")
-  {
     return handleLpop(tokens, db);
-  }
   else if (command == "RPOP")
-  {
     return handleRpop(tokens, db);
-  }
   else if (command == "LREM")
-  {
     return handleLrem(tokens, db);
-  }
   else if (command == "LINDEX")
-  {
     return handleLindex(tokens, db);
-  }
   else if (command == "LSET")
-  {
     return handleLset(tokens, db);
-  }
+  else if (command == "HSET")
+    return handleHset(tokens, db);
+  else if (command == "HGET")
+    return handleHget(tokens, db);
+  else if (command == "HEXISTS")
+    return handleHexists(tokens, db);
+  else if (command == "HDEL")
+    return handleHdel(tokens, db);
+  else if (command == "HGETALL")
+    return handleHgetall(tokens, db);
+  else if (command == "HKEYS")
+    return handleHkeys(tokens, db);
+  else if (command == "HVALS")
+    return handleHvals(tokens, db);
+  else if (command == "HLEN")
+    return handleHlen(tokens, db);
+  else if (command == "HMSET")
+    return handleHmset(tokens, db);
   return "-ERR: Unknown command\r\n";
 }
