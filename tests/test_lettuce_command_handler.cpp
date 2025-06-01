@@ -98,7 +98,8 @@ TEST_CASE("LettuceCommandHandler LSET sets element at index", "[handler]")
     REQUIRE(lindex_resp.find("$1\r\nf\r\n") != std::string::npos);
 }
 
-TEST_CASE("LettuceCommandHandler LPUSH adds elements to the left", "[handler]") {
+TEST_CASE("LettuceCommandHandler LPUSH adds elements to the left", "[handler]")
+{
     LettuceCommandHandler handler;
     handler.handleCommand("*3\r\n$5\r\nLPUSH\r\n$6\r\nmylist\r\n$1\r\na\r\n");
     handler.handleCommand("*3\r\n$5\r\nLPUSH\r\n$6\r\nmylist\r\n$1\r\nb\r\n");
@@ -108,7 +109,8 @@ TEST_CASE("LettuceCommandHandler LPUSH adds elements to the left", "[handler]") 
     REQUIRE(lindex1.find("$1\r\na\r\n") != std::string::npos); // a is now at index 1
 }
 
-TEST_CASE("LettuceCommandHandler RPUSH adds elements to the right", "[handler]") {
+TEST_CASE("LettuceCommandHandler RPUSH adds elements to the right", "[handler]")
+{
     LettuceCommandHandler handler;
     handler.handleCommand("*3\r\n$5\r\nRPUSH\r\n$5\r\nlisty\r\n$1\r\nn\r\n");
     handler.handleCommand("*3\r\n$5\r\nRPUSH\r\n$5\r\nlisty\r\n$1\r\nj\r\n");
@@ -116,4 +118,67 @@ TEST_CASE("LettuceCommandHandler RPUSH adds elements to the right", "[handler]")
     std::string lindex1 = handler.handleCommand("*3\r\n$6\r\nLINDEX\r\n$5\r\nlisty\r\n$1\r\n1\r\n");
     REQUIRE(lindex0.find("$1\r\nn\r\n") != std::string::npos);
     REQUIRE(lindex1.find("$1\r\nj\r\n") != std::string::npos);
+}
+
+TEST_CASE("LettuceCommandHandler HSET and HGET", "[handler]")
+{
+    LettuceCommandHandler handler;
+    std::string hset_resp = handler.handleCommand("*4\r\n$4\r\nHSET\r\n$6\r\nmyhash\r\n$5\r\nfield\r\n$5\r\nvalue\r\n");
+    REQUIRE(hset_resp.find(":1") != std::string::npos);
+    std::string hget_resp = handler.handleCommand("*3\r\n$4\r\nHGET\r\n$6\r\nmyhash\r\n$5\r\nfield\r\n");
+    REQUIRE(hget_resp.find("$5\r\nvalue\r\n") != std::string::npos);
+}
+
+TEST_CASE("LettuceCommandHandler HEXISTS and HDEL", "[handler]")
+{
+    LettuceCommandHandler handler;
+    handler.handleCommand("*4\r\n$4\r\nHSET\r\n$6\r\nmyhash\r\n$3\r\nfoo\r\n$3\r\nbar\r\n");
+    std::string hexists_resp = handler.handleCommand("*3\r\n$7\r\nHEXISTS\r\n$6\r\nmyhash\r\n$3\r\nfoo\r\n");
+    REQUIRE(hexists_resp.find(":1") != std::string::npos);
+    std::string hdel_resp = handler.handleCommand("*3\r\n$4\r\nHDEL\r\n$6\r\nmyhash\r\n$3\r\nfoo\r\n");
+    REQUIRE(hdel_resp.find(":1") != std::string::npos);
+    std::string hexists2_resp = handler.handleCommand("*3\r\n$7\r\nHEXISTS\r\n$6\r\nmyhash\r\n$3\r\nfoo\r\n");
+    REQUIRE(hexists2_resp.find(":0") != std::string::npos);
+}
+
+TEST_CASE("LettuceCommandHandler HGETALL returns all fields and values", "[handler]")
+{
+    LettuceCommandHandler handler;
+    handler.handleCommand("*4\r\n$4\r\nHSET\r\n$6\r\nmyhash\r\n$2\r\nf1\r\n$2\r\nv1\r\n");
+    handler.handleCommand("*4\r\n$4\r\nHSET\r\n$6\r\nmyhash\r\n$2\r\nf2\r\n$2\r\nv2\r\n");
+    std::string hgetall_resp = handler.handleCommand("*2\r\n$7\r\nHGETALL\r\n$6\r\nmyhash\r\n");
+    REQUIRE(hgetall_resp.find("$2\r\nf1\r\n$2\r\nv1\r\n") != std::string::npos);
+    REQUIRE(hgetall_resp.find("$2\r\nf2\r\n$2\r\nv2\r\n") != std::string::npos);
+}
+
+TEST_CASE("LettuceCommandHandler HKEYS and HVALS", "[handler]")
+{
+    LettuceCommandHandler handler;
+    handler.handleCommand("*4\r\n$4\r\nHSET\r\n$6\r\nmyhash\r\n$2\r\nk1\r\n$2\r\nv1\r\n");
+    handler.handleCommand("*4\r\n$4\r\nHSET\r\n$6\r\nmyhash\r\n$2\r\nk2\r\n$2\r\nv2\r\n");
+    std::string hkeys_resp = handler.handleCommand("*2\r\n$5\r\nHKEYS\r\n$6\r\nmyhash\r\n");
+    REQUIRE(hkeys_resp.find("$2\r\nk1\r\n") != std::string::npos);
+    REQUIRE(hkeys_resp.find("$2\r\nk2\r\n") != std::string::npos);
+    std::string hvals_resp = handler.handleCommand("*2\r\n$5\r\nHVALS\r\n$6\r\nmyhash\r\n");
+    REQUIRE(hvals_resp.find("$2\r\nv1\r\n") != std::string::npos);
+    REQUIRE(hvals_resp.find("$2\r\nv2\r\n") != std::string::npos);
+}
+
+TEST_CASE("LettuceCommandHandler HLEN returns correct number of fields", "[handler]")
+{
+    LettuceCommandHandler handler;
+    handler.handleCommand("*4\r\n$4\r\nHSET\r\n$6\r\nssssss\r\n$2\r\nf1\r\n$2\r\nv1\r\n");
+    handler.handleCommand("*4\r\n$4\r\nHSET\r\n$6\r\nssssss\r\n$2\r\nf2\r\n$2\r\nv2\r\n");
+    std::string hlen_resp = handler.handleCommand("*2\r\n$4\r\nHLEN\r\n$6\r\nssssss\r\n");
+    REQUIRE(hlen_resp.find(":2") != std::string::npos);
+}
+
+TEST_CASE("LettuceCommandHandler HMSET sets multiple fields", "[handler]")
+{
+    LettuceCommandHandler handler;
+    std::string hmset_cmd = "*6\r\n$5\r\nHMSET\r\n$6\r\nmyhash\r\n$2\r\nf1\r\n$2\r\nv1\r\n$2\r\nf2\r\n$2\r\nv2\r\n";
+    std::string hmset_resp = handler.handleCommand(hmset_cmd);
+    REQUIRE(hmset_resp.find("+OK") != std::string::npos);
+    std::string hget_resp = handler.handleCommand("*3\r\n$4\r\nHGET\r\n$6\r\nmyhash\r\n$2\r\nf2\r\n");
+    REQUIRE(hget_resp.find("$2\r\nv2\r\n") != std::string::npos);
 }

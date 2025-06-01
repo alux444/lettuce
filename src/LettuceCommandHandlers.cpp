@@ -352,6 +352,7 @@ std::string handleHlen(const std::vector<std::string> &tokens, LettuceDatabase &
   }
   const std::string key = tokens[1];
   size_t len = db.hlen(key);
+  std::cerr << "GOT LEN " << len << "\n";
   return ":" + std::to_string(len) + "\r\n";
 }
 
