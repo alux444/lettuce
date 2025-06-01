@@ -20,6 +20,7 @@ public:
   bool load(const std::string &filename);
 
   bool flushAll();
+  void purgeExpired();
 
   // key values
   void set(const std::string &key, const std::string &value);

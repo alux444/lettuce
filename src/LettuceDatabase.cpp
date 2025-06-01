@@ -17,22 +17,42 @@ LettuceDatabase &LettuceDatabase::getInstance()
 bool LettuceDatabase::flushAll()
 {
   std::lock_guard<std::mutex> lock(db_mutex);
+  purgeExpired();
   keyValueStore.clear();
   listStore.clear();
   hashStore.clear();
   return true;
 }
 
+void LettuceDatabase::purgeExpired()
+{
+  auto now = std::chrono::steady_clock::now();
+  for (auto it = expiryMap.begin(); it != expiryMap.end(); )
+  {
+    if (now > it->second)
+    {
+      keyValueStore.erase(it->first);
+      listStore.erase(it->first);
+      hashStore.erase(it->first);
+      it = expiryMap.erase(it);
+    } else {
+      it++;
+    }
+  }
+}
+
 /* Key Value operations*/
 void LettuceDatabase::set(const std::string &key, const std::string &value)
 {
   std::lock_guard<std::mutex> lock(db_mutex);
+  purgeExpired();
   keyValueStore[key] = value;
 }
 
 bool LettuceDatabase::get(const std::string &key, std::string &value)
 {
   std::lock_guard<std::mutex> lock(db_mutex);
+  purgeExpired();
   auto iterator = keyValueStore.find(key);
   if (iterator != keyValueStore.end())
   {
@@ -45,6 +65,7 @@ bool LettuceDatabase::get(const std::string &key, std::string &value)
 std::string LettuceDatabase::type(const std::string &key)
 {
   std::lock_guard<std::mutex> lock(db_mutex);
+  purgeExpired();
   if (keyValueStore.find(key) != keyValueStore.end())
   {
     return "string";
@@ -63,6 +84,7 @@ std::string LettuceDatabase::type(const std::string &key)
 std::vector<std::string> LettuceDatabase::keys()
 {
   std::lock_guard<std::mutex> lock(db_mutex);
+  purgeExpired();
   std::vector<std::string> keys{};
   for (const auto &pair : keyValueStore)
   {
@@ -87,6 +109,7 @@ std::vector<std::string> LettuceDatabase::keys()
 bool LettuceDatabase::del(const std::string &key)
 {
   std::lock_guard<std::mutex> lock(db_mutex);
+  purgeExpired();
   bool erased = false;
   erased |= keyValueStore.erase(key) > 0;
   erased |= listStore.erase(key) > 0;
@@ -97,6 +120,7 @@ bool LettuceDatabase::del(const std::string &key)
 bool LettuceDatabase::expire(const std::string &key, int seconds)
 {
   std::lock_guard<std::mutex> lock(db_mutex);
+  purgeExpired();
   bool exists = (keyValueStore.find(key) != keyValueStore.end()) ||
                 (listStore.find(key) != listStore.end()) ||
                 (hashStore.find(key) != hashStore.end());
@@ -109,6 +133,7 @@ bool LettuceDatabase::expire(const std::string &key, int seconds)
 bool LettuceDatabase::rename(const std::string &oldKey, const std::string &newKey)
 {
   std::lock_guard<std::mutex> lock(db_mutex);
+  purgeExpired();
   bool found = false;
   auto iteratorKv = keyValueStore.find(oldKey);
   if (iteratorKv != keyValueStore.end())
@@ -148,6 +173,7 @@ bool LettuceDatabase::dump(const std::string &filename)
 {
   // use mutex for thread safety
   std::lock_guard<std::mutex> lock(db_mutex);
+  purgeExpired();
   std::ofstream ofs(filename, std::ios::binary);
   if (!ofs)
     return false;
@@ -180,6 +206,7 @@ bool LettuceDatabase::dump(const std::string &filename)
 size_t LettuceDatabase::llen(const std::string &key)
 {
   std::lock_guard<std::mutex> lock(db_mutex);
+  purgeExpired();
   auto iterator = listStore.find(key);
   if (iterator != listStore.end())
     return iterator->second.size();
@@ -189,18 +216,21 @@ size_t LettuceDatabase::llen(const std::string &key)
 void LettuceDatabase::lpush(const std::string &key, const std::string &value)
 {
   std::lock_guard<std::mutex> lock(db_mutex);
+  purgeExpired();
   listStore[key].insert(listStore[key].begin(), value);
 }
 
 void LettuceDatabase::rpush(const std::string &key, const std::string &value)
 {
   std::lock_guard<std::mutex> lock(db_mutex);
+  purgeExpired();
   listStore[key].push_back(value);
 }
 
 bool LettuceDatabase::lpop(const std::string &key, std::string &value)
 {
   std::lock_guard<std::mutex> lock(db_mutex);
+  purgeExpired();
   auto iterator = listStore.find(key);
   if (iterator != listStore.end() && !iterator->second.empty())
   {
@@ -214,6 +244,7 @@ bool LettuceDatabase::lpop(const std::string &key, std::string &value)
 bool LettuceDatabase::rpop(const std::string &key, std::string &value)
 {
   std::lock_guard<std::mutex> lock(db_mutex);
+  purgeExpired();
   auto iterator = listStore.find(key);
   if (iterator != listStore.end() && !iterator->second.empty())
   {
@@ -227,6 +258,7 @@ bool LettuceDatabase::rpop(const std::string &key, std::string &value)
 int LettuceDatabase::lrem(const std::string &key, int count, const std::string &value)
 {
   std::lock_guard<std::mutex> lock(db_mutex);
+  purgeExpired();
   int removed{0};
   auto iterator = listStore.find(key);
   if (iterator == listStore.end())
@@ -283,6 +315,7 @@ int LettuceDatabase::lrem(const std::string &key, int count, const std::string &
 bool LettuceDatabase::lindex(const std::string &key, int index, std::string &value)
 {
   std::lock_guard<std::mutex> lock(db_mutex);
+  purgeExpired();
   auto iter = listStore.find(key);
   if (iter == listStore.end())
     return false;
@@ -299,6 +332,7 @@ bool LettuceDatabase::lindex(const std::string &key, int index, std::string &val
 bool LettuceDatabase::lset(const std::string &key, int index, const std::string &value)
 {
   std::lock_guard<std::mutex> lock(db_mutex);
+  purgeExpired();
   auto iter = listStore.find(key);
   if (iter == listStore.end())
     return false;
@@ -316,6 +350,7 @@ bool LettuceDatabase::lset(const std::string &key, int index, const std::string 
 bool LettuceDatabase::hset(const std::string &key, const std::string &field, const std::string &value)
 {
   std::lock_guard<std::mutex> lock(db_mutex);
+  purgeExpired();
   hashStore[key][field] = value;
   return true;
 }
@@ -323,6 +358,7 @@ bool LettuceDatabase::hset(const std::string &key, const std::string &field, con
 bool LettuceDatabase::hget(const std::string &key, const std::string &field, std::string &value)
 {
   std::lock_guard<std::mutex> lock(db_mutex);
+  purgeExpired();
   auto it = hashStore.find(key);
   if (it != hashStore.end())
   {
@@ -340,6 +376,7 @@ bool LettuceDatabase::hget(const std::string &key, const std::string &field, std
 bool LettuceDatabase::hexists(const std::string &key, const std::string &field)
 {
   std::lock_guard<std::mutex> lock(db_mutex);
+  purgeExpired();
   auto it = hashStore.find(key);
   if (it != hashStore.end())
   {
@@ -352,6 +389,7 @@ bool LettuceDatabase::hexists(const std::string &key, const std::string &field)
 bool LettuceDatabase::hdel(const std::string &key, const std::string &field)
 {
   std::lock_guard<std::mutex> lock(db_mutex);
+  purgeExpired();
   auto it = hashStore.find(key);
   if (it != hashStore.end())
   {
@@ -363,6 +401,7 @@ bool LettuceDatabase::hdel(const std::string &key, const std::string &field)
 std::unordered_map<std::string, std::string> LettuceDatabase::hgetall(const std::string &key)
 {
   std::lock_guard<std::mutex> lock(db_mutex);
+  purgeExpired();
   if (hashStore.find(key) != hashStore.end())
     return hashStore[key];
   return {};
@@ -371,6 +410,7 @@ std::unordered_map<std::string, std::string> LettuceDatabase::hgetall(const std:
 std::vector<std::string> LettuceDatabase::hkeys(const std::string &key)
 {
   std::lock_guard<std::mutex> lock(db_mutex);
+  purgeExpired();
   std::vector<std::string> fields;
   auto it = hashStore.find(key);
   if (it != hashStore.end())
@@ -386,6 +426,7 @@ std::vector<std::string> LettuceDatabase::hkeys(const std::string &key)
 std::vector<std::string> LettuceDatabase::hvals(const std::string &key)
 {
   std::lock_guard<std::mutex> lock(db_mutex);
+  purgeExpired();
   std::vector<std::string> values;
   auto it = hashStore.find(key);
   if (it != hashStore.end())
@@ -401,6 +442,7 @@ std::vector<std::string> LettuceDatabase::hvals(const std::string &key)
 size_t LettuceDatabase::hlen(const std::string &key)
 {
   std::lock_guard<std::mutex> lock(db_mutex);
+  purgeExpired();
   auto it = hashStore.find(key);
   return it != hashStore.end() ? it->second.size() : 0;
 }
@@ -408,6 +450,7 @@ size_t LettuceDatabase::hlen(const std::string &key)
 bool LettuceDatabase::hmset(const std::string &key, const std::vector<std::pair<std::string, std::string>> &pairs)
 {
   std::lock_guard<std::mutex> lock(db_mutex);
+  purgeExpired();
   for (const auto &[field, value] : pairs)
     hashStore[key][field] = value;
   return true;
@@ -417,6 +460,7 @@ bool LettuceDatabase::hmset(const std::string &key, const std::vector<std::pair<
 bool LettuceDatabase::load(const std::string &filename)
 {
   std::lock_guard<std::mutex> lock(db_mutex);
+  purgeExpired();
   std::ifstream ifs(filename, std::ios::binary);
   if (!ifs)
     return false;

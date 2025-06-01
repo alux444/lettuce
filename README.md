@@ -3,7 +3,7 @@
 A lightweight, Redis-like in-memory key-value store with support for strings, lists, and hashes.  
 Implements a subset of the Redis protocol (RESP) and supports basic persistence.
 
----c
+---
 
 ## Building
 

@@ -3,6 +3,8 @@
 #include "test_utils.h"
 
 #include <cstdio> // for std::remove
+#include <chrono>
+#include <thread>
 
 TEST_CASE("LettuceDatabase is a singleton", "[database]")
 {
@@ -301,6 +303,23 @@ TEST_CASE("LettuceDatabase hmset sets multiple fields", "[database]")
     std::string value;
     REQUIRE(db.hget("myhash", "f2", value));
     REQUIRE(value == "v2");
+
+    cleanup();
+}
+
+TEST_CASE("LettuceDatabase purgeExpired removes expired keys", "[database]") {
+    LettuceDatabase &db = LettuceDatabase::getInstance();
+    db.flushAll();
+
+    db.set("foo", "bar");
+    db.expire("foo", 1); // expire in 1 second
+
+    // Wait for key to expire
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+    db.purgeExpired();
+
+    std::string value;
+    REQUIRE_FALSE(db.get("foo", value)); // Should be gone
 
     cleanup();
 }
