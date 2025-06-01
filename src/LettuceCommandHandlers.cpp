@@ -262,7 +262,7 @@ std::string handleHget(const std::vector<std::string> &tokens, LettuceDatabase &
   }
   const std::string key = tokens[1];
   const std::string field = tokens[2];
-  const std::string value = tokens[3];
+  std::string value;
   if (db.hget(key, field, value))
     return "$" + std::to_string(value.size()) + "\r\n" + value + "\r\n";
   return "$-1\r\n";

@@ -312,6 +312,108 @@ bool LettuceDatabase::lset(const std::string &key, int index, const std::string 
   return true;
 }
 
+/* Hash operations */
+bool LettuceDatabase::hset(const std::string &key, const std::string &field, const std::string &value)
+{
+  std::lock_guard<std::mutex> lock(db_mutex);
+  hashStore[key][field] = value;
+  return true;
+}
+
+bool LettuceDatabase::hget(const std::string &key, const std::string &field, std::string &value)
+{
+  std::lock_guard<std::mutex> lock(db_mutex);
+  auto it = hashStore.find(key);
+  if (it != hashStore.end())
+  {
+    auto f = it->second.find(field);
+    if (f != it->second.end())
+    {
+      std::cerr << "HGET FOUND " << &field << " " << f->second << "\n";
+      value = f->second;
+      return true;
+    }
+  }
+  return false;
+}
+
+bool LettuceDatabase::hexists(const std::string &key, const std::string &field)
+{
+  std::lock_guard<std::mutex> lock(db_mutex);
+  auto it = hashStore.find(key);
+  if (it != hashStore.end())
+  {
+    auto f = it->second.find(field);
+    return f != it->second.end();
+  }
+  return false;
+}
+
+bool LettuceDatabase::hdel(const std::string &key, const std::string &field)
+{
+  std::lock_guard<std::mutex> lock(db_mutex);
+  auto it = hashStore.find(key);
+  if (it != hashStore.end())
+  {
+    return it->second.erase(field) > 0; // returns 1 on removing something
+  }
+  return false;
+}
+
+std::unordered_map<std::string, std::string> LettuceDatabase::hgetall(const std::string &key)
+{
+  std::lock_guard<std::mutex> lock(db_mutex);
+  if (hashStore.find(key) != hashStore.end())
+    return hashStore[key];
+  return {};
+}
+
+std::vector<std::string> LettuceDatabase::hkeys(const std::string &key)
+{
+  std::lock_guard<std::mutex> lock(db_mutex);
+  std::vector<std::string> fields;
+  auto it = hashStore.find(key);
+  if (it != hashStore.end())
+  {
+    for (const auto &[key, _] : it->second)
+    {
+      fields.push_back(key);
+    }
+  }
+  return fields;
+}
+
+std::vector<std::string> LettuceDatabase::hvals(const std::string &key)
+{
+  std::lock_guard<std::mutex> lock(db_mutex);
+  std::vector<std::string> values;
+  auto it = hashStore.find(key);
+  if (it != hashStore.end())
+  {
+    for (const auto &[_, value] : it->second)
+    {
+      values.push_back(value);
+    }
+  }
+  return values;
+}
+
+size_t LettuceDatabase::hlen(const std::string &key)
+{
+  std::lock_guard<std::mutex> lock(db_mutex);
+  auto it = hashStore.find(key);
+  return it != hashStore.end() ? it->second.size() : 0;
+}
+
+bool LettuceDatabase::hmset(const std::string &key, const std::vector<std::pair<std::string, std::string>> &pairs)
+{
+  std::lock_guard<std::mutex> lock(db_mutex);
+  for (const auto &[field, value] : pairs)
+    hashStore[key][field] = value;
+  return true;
+}
+
+/* Dump files*/
 bool LettuceDatabase::load(const std::string &filename)
 {
   std::lock_guard<std::mutex> lock(db_mutex);

@@ -218,3 +218,89 @@ TEST_CASE("LettuceDatabase lset sets correct element", "[database]")
 
     cleanup();
 }
+
+TEST_CASE("LettuceDatabase hset and hget work", "[database]")
+{
+    LettuceDatabase &db = LettuceDatabase::getInstance();
+    db.flushAll();
+
+    REQUIRE(db.hset("myhash", "field1", "val1"));
+    std::string value;
+    REQUIRE(db.hget("myhash", "field1", value));
+    REQUIRE(value == "val1");
+
+    cleanup();
+}
+
+TEST_CASE("LettuceDatabase hexists and hdel work", "[database]")
+{
+    LettuceDatabase &db = LettuceDatabase::getInstance();
+    db.flushAll();
+
+    db.hset("myhash", "field1", "val1");
+    REQUIRE(db.hexists("myhash", "field1"));
+    REQUIRE(db.hdel("myhash", "field1"));
+    REQUIRE_FALSE(db.hexists("myhash", "field1"));
+
+    cleanup();
+}
+
+TEST_CASE("LettuceDatabase hgetall returns all fields and values", "[database]")
+{
+    LettuceDatabase &db = LettuceDatabase::getInstance();
+    db.flushAll();
+
+    db.hset("myhash", "field1", "val1");
+    db.hset("myhash", "field2", "val2");
+    auto all = db.hgetall("myhash");
+    REQUIRE(all.size() == 2);
+    REQUIRE(all["field1"] == "val1");
+    REQUIRE(all["field2"] == "val2");
+
+    cleanup();
+}
+
+TEST_CASE("LettuceDatabase hkeys and hvals return correct lists", "[database]")
+{
+    LettuceDatabase &db = LettuceDatabase::getInstance();
+    db.flushAll();
+
+    db.hset("myhash", "field1", "val1");
+    db.hset("myhash", "field2", "val2");
+    auto keys = db.hkeys("myhash");
+    auto vals = db.hvals("myhash");
+    REQUIRE(std::find(keys.begin(), keys.end(), "field1") != keys.end());
+    REQUIRE(std::find(keys.begin(), keys.end(), "field2") != keys.end());
+    REQUIRE(std::find(vals.begin(), vals.end(), "val1") != vals.end());
+    REQUIRE(std::find(vals.begin(), vals.end(), "val2") != vals.end());
+
+    cleanup();
+}
+
+TEST_CASE("LettuceDatabase hlen returns correct number of fields", "[database]")
+{
+    LettuceDatabase &db = LettuceDatabase::getInstance();
+    db.flushAll();
+
+    db.hset("myhash", "field1", "val1");
+    db.hset("myhash", "field2", "val2");
+    REQUIRE(db.hlen("myhash") == 2);
+
+    cleanup();
+}
+
+TEST_CASE("LettuceDatabase hmset sets multiple fields", "[database]")
+{
+    LettuceDatabase &db = LettuceDatabase::getInstance();
+    db.flushAll();
+
+    std::vector<std::pair<std::string, std::string>> pairs = {
+        {"f1", "v1"}, {"f2", "v2"}, {"f3", "v3"}};
+    REQUIRE(db.hmset("myhash", pairs));
+    REQUIRE(db.hlen("myhash") == 3);
+    std::string value;
+    REQUIRE(db.hget("myhash", "f2", value));
+    REQUIRE(value == "v2");
+
+    cleanup();
+}
